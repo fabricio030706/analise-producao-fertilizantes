@@ -1,0 +1,139 @@
+
+<html>
+<head>
+    <title>Dashboard de Paradas</title>
+
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+
+    <style>
+        body {
+            font-family: 'Segoe UI';
+            background: linear-gradient(135deg, #eef2f7, #f8fafc);
+            margin: 0;
+            padding: 30px;
+        }
+
+        h1 {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .filtro {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        select {
+            padding: 10px;
+            font-size: 16px;
+            border-radius: 8px;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 25px;
+            max-width: 1300px;
+            margin: auto;
+        }
+
+        .card {
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 6px 15px rgba(0,0,0,0.1);
+        }
+
+        .full {
+            grid-column: span 2;
+        }
+    </style>
+</head>
+
+<body>
+
+<h1>📊 Dashboard de Paradas</h1>
+
+<div class="filtro">
+    <label><b>Filtrar Máquina:</b></label>
+    <select id="filtroMaquina" onchange="atualizar()">
+        <option value="Todos">Todos</option>
+        <option value="Maquina_1">Maquina_1</option><option value="Maquina_2">Maquina_2</option><option value="Maquina_3">Maquina_3</option><option value="Maquina_4">Maquina_4</option>
+    </select>
+</div>
+
+<div class="grid">
+    <div class="card"><div id="grafico1"></div></div>
+    <div class="card"><div id="grafico2"></div></div>
+    <div class="card full"><div id="grafico3"></div></div>
+</div>
+
+<script>
+var df = [{"maquina":"Maquina_1","inicio":1782155478000,"fim":1782157278000,"duracao_min":30,"data":1782086400000,"mes":6,"ano":2026,"hora_inicio":19},{"maquina":"Maquina_2","inicio":1782148278000,"fim":1782150378000,"duracao_min":35,"data":1782086400000,"mes":6,"ano":2026,"hora_inicio":17},{"maquina":"Maquina_3","inicio":1782141078000,"fim":1782143478000,"duracao_min":40,"data":1782086400000,"mes":6,"ano":2026,"hora_inicio":15},{"maquina":"Maquina_1","inicio":1782133878000,"fim":1782136578000,"duracao_min":45,"data":1782086400000,"mes":6,"ano":2026,"hora_inicio":13},{"maquina":"Maquina_2","inicio":1782126678000,"fim":1782129678000,"duracao_min":50,"data":1782086400000,"mes":6,"ano":2026,"hora_inicio":11},{"maquina":"Maquina_3","inicio":1782119478000,"fim":1782122778000,"duracao_min":55,"data":1782086400000,"mes":6,"ano":2026,"hora_inicio":9},{"maquina":"Maquina_1","inicio":1782112278000,"fim":1782115878000,"duracao_min":60,"data":1782086400000,"mes":6,"ano":2026,"hora_inicio":7},{"maquina":"Maquina_2","inicio":1782105078000,"fim":1782108978000,"duracao_min":65,"data":1782086400000,"mes":6,"ano":2026,"hora_inicio":5},{"maquina":"Maquina_3","inicio":1782097878000,"fim":1782102078000,"duracao_min":70,"data":1782086400000,"mes":6,"ano":2026,"hora_inicio":3},{"maquina":"Maquina_1","inicio":1782090678000,"fim":1782095178000,"duracao_min":75,"data":1782086400000,"mes":6,"ano":2026,"hora_inicio":1},{"maquina":"Maquina_2","inicio":1782105078000,"fim":1782108978000,"duracao_min":65,"data":1782086400000,"mes":6,"ano":2026,"hora_inicio":5},{"maquina":"Maquina_3","inicio":1782097878000,"fim":1782102078000,"duracao_min":70,"data":1782086400000,"mes":6,"ano":2026,"hora_inicio":3},{"maquina":"Maquina_4","inicio":1782090678000,"fim":1782095178000,"duracao_min":75,"data":1782086400000,"mes":6,"ano":2026,"hora_inicio":1}];
+var resumo = [{"maquina":"Maquina_1","duracao_min":210},{"maquina":"Maquina_2","duracao_min":215},{"maquina":"Maquina_3","duracao_min":235},{"maquina":"Maquina_4","duracao_min":75}];
+
+function filtrarDados(maquina) {
+    if (maquina === "Todos") return df;
+    return df.filter(d => d.maquina === maquina);
+}
+
+function filtrarResumo(maquina) {
+    if (maquina === "Todos") return resumo;
+    return resumo.filter(d => d.maquina === maquina);
+}
+
+function atualizar() {
+    var maquina = document.getElementById("filtroMaquina").value;
+
+    var dfFiltrado = filtrarDados(maquina);
+    var resumoFiltrado = filtrarResumo(maquina);
+
+    // 📊 GRAFICO 1
+    var maquinas = resumoFiltrado.map(d => d.maquina);
+    var valores = resumoFiltrado.map(d => d.duracao_min);
+
+    Plotly.newPlot("grafico1", [{
+        x: maquinas,
+        y: valores,
+        type: 'bar',
+        marker: {
+            color: valores,
+            colorscale: 'Inferno'
+        }
+    }], {title: "Paradas por Máquina"});
+
+    // 📊 GRAFICO 2
+    let horas = {};
+    dfFiltrado.forEach(d => {
+        if (!horas[d.hora_inicio]) horas[d.hora_inicio] = 0;
+        horas[d.hora_inicio] += d.duracao_min;
+    });
+
+    Plotly.newPlot("grafico2", [{
+        x: Object.keys(horas),
+        y: Object.values(horas),
+        type: 'bar',
+        marker: {
+            color: Object.values(horas),
+            colorscale: 'Inferno'
+        }
+    }], {title: "Paradas por Hora"});
+
+    // 📊 GRAFICO 3 (ranking)
+    Plotly.newPlot("grafico3", [{
+        x: valores,
+        y: maquinas,
+        type: 'bar',
+        orientation: 'h',
+        marker: {
+            color: valores,
+            colorscale: 'Inferno'
+        }
+    }], {title: "Ranking de Máquinas"});
+}
+
+atualizar();
+</script>
+
+</body>
+</html>
